@@ -13,7 +13,7 @@ import "hardhat/console.sol";
  * @notice A Vault contract
  */
 
-contract Vault is Ownable, Pausable, ReentrancyGuard {
+contract VaultC is Ownable, Pausable, ReentrancyGuard {
 
     using SafeMath for uint256;
     // using SafeERC20 for ICoin;
@@ -38,12 +38,12 @@ contract Vault is Ownable, Pausable, ReentrancyGuard {
     // ==========Constructor========================================
     constructor(
         ICoin _token,
-        uint256 tokenPerETHVal      // 10_000 say for 1 ETH -> 10,000 AUDC tokens
+        uint256 tokenPerETHVal      // 3_000 say for 1 ETH -> 3,000 AUDC tokens
     ) {
         require(address(_token) != address(0), "Invalid address");
         
         token = _token;
-        tokenPerETH = tokenPerETHVal.mul(1e18);  /*10_000 * 10 ** 18;*/        // Testing: 1 ETH -> 10,000 AUDC tokens.
+        tokenPerETH = tokenPerETHVal.mul(1e18);  /*3_000 * 10 ** 18;*/        // Testing: 1 ETH -> 3,000 AUDC tokens.
     }
 
     // ==========Functions==========================================
@@ -94,7 +94,9 @@ contract Vault is Ownable, Pausable, ReentrancyGuard {
         vaultBalances[msg.sender].collateralAmount = ca.sub(transferAmt);
         vaultBalances[msg.sender].debtAmount = da.sub(repaymentAmount);
 
-        // TODO: burn tokens
+        // burn repayment tokens
+        bool success = token.burn(msg.sender, repaymentAmount);
+        require(success, "Token burning of repayment tokens failed during withdraw");
 
         // transfer ETH (in wei) corresponding to repayment amount
         (bool sent, /*bytes memory data*/) = msg.sender.call{value: transferAmt.mul(1e18)}("");     // in wei
@@ -138,7 +140,7 @@ contract Vault is Ownable, Pausable, ReentrancyGuard {
             internal view 
             returns (uint256)
     {
-        // For 1 ETH tokens, (10^18/10^18) * (10_000 * 10^18)/10^18
+        // For 1 ETH tokens, (10^18/10^18) * (3_000 * 10^18)/10^18
         return (_weiAmount.div(1e18)).mul(tokenPerETH.div(1e18));
     }
 
@@ -152,7 +154,7 @@ contract Vault is Ownable, Pausable, ReentrancyGuard {
             internal view 
             returns (uint256)
     {
-        // For 50 AUDC tokens, 50 * 10^18 / (10_000 * 10^18)
+        // For 50 AUDC tokens, 50 * 10^18 / (3_000 * 10^18)
         return tokenAmt.mul(1e18).div(tokenPerETH);
     }
 
