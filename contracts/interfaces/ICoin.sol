@@ -9,6 +9,11 @@ interface ICoin {
     // #### Function definitions
 
     /**
+     * @dev Returns the amount of tokens owned by `account`.
+     */
+    function balanceOf(address account) external view returns (uint256);
+
+    /**
     @notice Mints a specified amount of tokens to an account
     @param account  the account to receive the new tokens
     @param amount  the amount to be minted

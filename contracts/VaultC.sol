@@ -54,7 +54,7 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     /**
      * @dev receive ETH from any address via low-level interaction.
      */     
-    fallback() external payable {
+    receive() external payable {
         emit Received(msg.sender, msg.value);
     }
     
