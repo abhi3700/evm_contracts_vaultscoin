@@ -7,6 +7,7 @@ import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import './interfaces/ICoin.sol';
+import './interfaces/ICoin.sol';
 import "hardhat/console.sol";
 
 /**
@@ -20,7 +21,9 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
 
     // ==========State variables====================================
     ICoin public token;
-    uint256 tokenPerETH;             // rate per ETH, calculated inside a function here.
+    uint256 public tokenPerETH;             // rate per ETH, calculated inside a function here.
+    uint256 public printVal;
+    uint256 public printVal2;
 
     // Struct definition
     struct Vault {
@@ -35,41 +38,52 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     event DepositMintDebtAmtFailed(address indexed depositor, uint256 collateralDeposited, uint256 amountMinted);
     event Withdrawn(address indexed withdrawer, uint256 collateralWithdrawn, uint256 amountBurned);
     event WithdrawTransferETHFailed(address indexed withdrawer, uint256 collateralWithdrawn, uint256 amountBurned);
+    event Received(address, uint);
     // ==========Constructor========================================
     constructor(
         ICoin _token,
-        uint256 tokenPerETHVal      // 3_000 say for 1 ETH -> 3,000 AUDC tokens
-    ) {
+        uint256 tokenMultiplier      // 3_000 say for 1 ETH -> 3,000 AUDC tokens
+    ) payable {
         require(address(_token) != address(0), "Invalid address");
         
         token = _token;
-        tokenPerETH = tokenPerETHVal.mul(1e18);  /*3_000 * 10 ** 18;*/        // Testing: 1 ETH -> 3,000 AUDC tokens.
+        tokenPerETH = tokenMultiplier.mul(1e18);  /*3_000 * 10 ** 18;*/        // Testing: 1 ETH -> 3,000 AUDC tokens.
     }
 
     // ==========Functions==========================================
+    /**
+     * @dev receive ETH from any address via low-level interaction.
+     */     
+    fallback() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+    
     /// @notice Allows a user to deposit ETH collateral in exchange for some amount of stablecoin
     /// @param amountToDeposit deposit the amount of ether the user sent in the transaction. Unit: wei
+    // function deposit() external payable whenNotPaused nonReentrant {
     function deposit(uint256 amountToDeposit) external payable whenNotPaused nonReentrant {
         require(msg.sender != address(0));
         require( msg.value > 0 && msg.value == amountToDeposit, "amount transferred must be positive and equal to parsed amount");
 
         // debtAmount calc
         // NOTE: assumption has been made
-        uint256 nda = _getTokenAmount(msg.value);        // new debt amount minted
+        uint256 nda = _getTokenAmount(msg.value);        // new debt amount calculated in wei
+        printVal = nda;
+        printVal2 = msg.value;
 
         uint256 ca = vaultBalances[msg.sender].collateralAmount;     // stored collateral amount
         uint256 da = vaultBalances[msg.sender].debtAmount;           // stored debt amount
 
         // update the collateral, debt amounts
-        vaultBalances[msg.sender].collateralAmount = ca.add(msg.value);
-        vaultBalances[msg.sender].debtAmount = da.add(nda);
+        vaultBalances[msg.sender].collateralAmount = ca.add(msg.value);       // add in wei
+        vaultBalances[msg.sender].debtAmount = da.add(nda);                   // add in wei
 
         // mint debt amount corresponding to deposited ETH
-        bool success = token.mint(msg.sender, nda);
+        bool success = token.mint(msg.sender, nda);               // parse in wei
         if(success) {
-            emit Deposited(msg.sender, msg.value.div(1e18), nda);                   // show in ETH for events    
+            emit Deposited(msg.sender, msg.value, nda);                   // show in Wei for events    
         } else {
-            emit DepositMintDebtAmtFailed(msg.sender, msg.value.div(1e18), nda);    // show in ETH for events        
+            emit DepositMintDebtAmtFailed(msg.sender, msg.value, nda);    // show in Wei for events        
             revert("Token Minting of debt amount failed during deposit.");
         }
     }
@@ -135,13 +149,13 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     // -------------------------------------------------------------
     /// @dev Override to extend the way in which ether is converted to tokens.
     /// @param _weiAmount Value in wei to be converted into tokens
-    /// @return Number of tokens that can be purchased with the specified _weiAmount. Unit: ETH
+    /// @return Number of tokens that can be purchased with the specified _weiAmount. Unit: wei
     function _getTokenAmount( uint256 _weiAmount ) 
             internal view 
             returns (uint256)
     {
-        // For 1 ETH tokens, (10^18/10^18) * (3_000 * 10^18)/10^18
-        return (_weiAmount.div(1e18)).mul(tokenPerETH.div(1e18));
+        // For 1 ETH tokens, (10^18/10^18) * (3_000 * 10^18)
+        return _weiAmount.mul(tokenPerETH).div(1e18);
     }
 
     // -------------------------------------------------------------
