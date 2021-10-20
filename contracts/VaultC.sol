@@ -91,18 +91,19 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     // -------------------------------------------------------------
     /// @notice Allows a user to withdraw up to 100% of the collateral they have on deposit
     /// @dev This cannot allow a user to withdraw more than they put in
-    /// @param repaymentAmount  the amount of stablecoin that a user is repaying to redeem their collateral for. Unit: ETH i.e. don't multiply with decimals. E.g. if 50 AUDC, then parse 50
+    /// @param repaymentAmount  the amount of stablecoin that a user is repaying to redeem their collateral for. Unit: Wei
     function withdraw(uint256 repaymentAmount) external whenNotPaused nonReentrant {
         require(msg.sender != address(0));
+        require(repaymentAmount <= token.balanceOf(msg.sender), "Insufficient AUDC balance");
 
         // read amounts
-        uint256 ca = vaultBalances[msg.sender].collateralAmount;     // stored collateral amount
-        uint256 da = vaultBalances[msg.sender].debtAmount;           // stored debt amount
+        uint256 ca = vaultBalances[msg.sender].collateralAmount;     // stored collateral amount in Wei
+        uint256 da = vaultBalances[msg.sender].debtAmount;           // stored debt amount in Wei
 
         require(repaymentAmount <= da, "repayment amount must be less than stored debt amount");
 
-        // calc ETH for repayment amount
-        uint256 transferAmt = _getETHAmount(repaymentAmount);
+        // calc ETH in Wei for repayment amount
+        uint256 transferAmt = _getWeiAmount(repaymentAmount);
 
         // update the collateral, debt amounts
         vaultBalances[msg.sender].collateralAmount = ca.sub(transferAmt);
@@ -113,11 +114,11 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
         require(success, "Token burning of repayment tokens failed during withdraw");
 
         // transfer ETH (in wei) corresponding to repayment amount
-        (bool sent, /*bytes memory data*/) = msg.sender.call{value: transferAmt.mul(1e18)}("");     // in wei
+        (bool sent, /*bytes memory data*/) = msg.sender.call{value: transferAmt}("");     // parse in wei
         if(sent) {
-            emit Withdrawn(msg.sender, transferAmt, repaymentAmount);
+            emit Withdrawn(msg.sender, transferAmt, repaymentAmount);               // show in Wei for events
         } else {
-            emit WithdrawTransferETHFailed(msg.sender, transferAmt, repaymentAmount);
+            emit WithdrawTransferETHFailed(msg.sender, transferAmt, repaymentAmount);       // show in Wei for events
             revert("ETH Token Transfer failed during withdraw.");
         }
     }
@@ -132,16 +133,16 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     
     // -------------------------------------------------------------
     /// @notice Returns an estimate of how much collateral could be withdrawn for a given amount of stablecoin
-    /// @param repaymentAmount  the amount of stable coin that would be repaid. E.g. 50 AUDC, then parse 50 here
-    /// @return collateralAmount the estimated amount of a vault's collateral that would be returned  unit --> ETH
+    /// @param repaymentAmount  the amount of stable coin that would be repaid. unit: Wei
+    /// @return collateralAmount the estimated amount of a vault's collateral that would be returned  unit: Wei
     function estimateCollateralAmount(uint256 repaymentAmount) external view returns(uint256 collateralAmount) {
-        return _getETHAmount(repaymentAmount);
+        return _getWeiAmount(repaymentAmount);
     }
     
     // -------------------------------------------------------------
     /// @notice Returns an estimate on how much stable coin could be minted at the current rate
     /// @param depositAmount the amount of ETH that would be deposited. Unit: wei
-    /// @return tokenAmount  the estimated amount of stablecoin that would be minted. Unit: ETH
+    /// @return tokenAmount  the estimated amount of stablecoin that would be minted. Unit: Wei
     function estimateTokenAmount(uint256 depositAmount) external view returns(uint256 tokenAmount) {
         return _getTokenAmount(depositAmount);
     }
@@ -149,7 +150,7 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     // -------------------------------------------------------------
     /// @dev Override to extend the way in which ether is converted to tokens.
     /// @param _weiAmount Value in wei to be converted into tokens
-    /// @return Number of tokens that can be purchased with the specified _weiAmount. Unit: wei
+    /// @return Number of tokens that can be purchased with the specified _weiAmount. Unit: Wei
     function _getTokenAmount( uint256 _weiAmount ) 
             internal view 
             returns (uint256)
@@ -161,14 +162,14 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     // -------------------------------------------------------------
     /**
     * @dev Override to extend the way in which tokens is converted to ETH.
-    * @param tokenAmt token amount. E.g. 50 AUDC, then parse 50 here
-    * @return Number of tokens in ETH for given token qty. Unit: ETH
+    * @param tokenAmt token amount. E.g. 50 AUDC, then parse 50*1e18 here
+    * @return Number of tokens in Wei for given token qty. Unit: Wei
     */
-    function _getETHAmount( uint256 tokenAmt ) 
+    function _getWeiAmount( uint256 tokenAmt ) 
             internal view 
             returns (uint256)
     {
-        // For 50 AUDC tokens, 50 * 10^18 / (3_000 * 10^18)
+        // For 50 AUDC tokens, (50 * 10^18) * 10^18 / (3_000 * 10^18)
         return tokenAmt.mul(1e18).div(tokenPerETH);
     }
 
