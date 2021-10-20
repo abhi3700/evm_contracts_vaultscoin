@@ -7,7 +7,6 @@ import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import './interfaces/ICoin.sol';
-import './interfaces/ICoin.sol';
 import "hardhat/console.sol";
 
 /**
