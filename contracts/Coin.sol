@@ -15,6 +15,7 @@ contract Coin is ERC20, Ownable, Pausable {
     // ==========Constructor========================================
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {}
 
+    // ==========Modifiers==========================================
     /**
      * @dev Throws if called by any account other than the owner.
      * 		Also, added vault contract address into permission for minting.
@@ -29,16 +30,20 @@ contract Coin is ERC20, Ownable, Pausable {
     /// @dev only by owner & vault address
     /// @param to receiver address
     /// @param amount mint amount
-    function mint(address to, uint256 amount) external onlyOwnerM whenNotPaused {
+    function mint(address to, uint256 amount) external onlyOwnerM whenNotPaused returns (bool) {
         _mint(to, amount);
+
+        return true;
     }
 
     // -------------------------------------------------------------
     /// @notice burn function
     /// @param from token owner address
     /// @param amount mint amount
-    function burn(address from, uint256 amount) external whenNotPaused {
+    function burn(address from, uint256 amount) external whenNotPaused returns (bool) {
         _burn(from, amount);
+
+        return true;
     }
 
     // -------------------------------------------------------------

@@ -19,10 +19,8 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     // using SafeERC20 for ICoin;
 
     // ==========State variables====================================
-    ICoin public token;
+    ICoin public token;                     // token contract address
     uint256 public tokenPerETH;             // rate per ETH, calculated inside a function here.
-    uint256 public printVal;
-    uint256 public printVal2;
 
     // Struct definition
     struct Vault {
@@ -46,7 +44,9 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
         require(address(_token) != address(0), "Invalid address");
         
         token = _token;
-        tokenPerETH = tokenMultiplier.mul(1e18);  /*3_000 * 10 ** 18;*/        // Testing: 1 ETH -> 3,000 AUDC tokens.
+        
+        // Testing: 1 ETH -> 3,000 AUDC tokens.
+        tokenPerETH = tokenMultiplier.mul(1e18);  /* 3_000 * 10 ** 18 */
     }
 
     // ==========Functions==========================================
@@ -57,6 +57,7 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
         emit Received(msg.sender, msg.value);
     }
     
+    // -------------------------------------------------------------
     /// @notice Allows a user to deposit ETH collateral in exchange for some amount of stablecoin
     /// @param amountToDeposit deposit the amount of ether the user sent in the transaction. Unit: wei
     // function deposit() external payable whenNotPaused nonReentrant {
@@ -67,8 +68,6 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
         // debtAmount calc
         // NOTE: assumption has been made
         uint256 nda = _getTokenAmount(msg.value);        // new debt amount calculated in wei
-        printVal = nda;
-        printVal2 = msg.value;
 
         uint256 ca = vaultBalances[msg.sender].collateralAmount;     // stored collateral amount
         uint256 da = vaultBalances[msg.sender].debtAmount;           // stored debt amount

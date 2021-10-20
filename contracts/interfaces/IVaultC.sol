@@ -35,19 +35,19 @@ interface IVaultC {
     @param userAddress  the address of the vault owner
     @return vault  the vault details
      */
-    function getVault(address userAddress) external view returns(Vault memory vault);
+    function getVault(address userAddress) external view returns (Vault memory vault);
     
     /**
     @notice Returns an estimate of how much collateral could be withdrawn for a given amount of stablecoin
     @param repaymentAmount  the amount of stable coin that would be repaid
     @return collateralAmount the estimated amount of a vault's collateral that would be returned 
      */
-    function estimateCollateralAmount(uint256 repaymentAmount) external view returns(uint256 collateralAmount);
+    function estimateCollateralAmount(uint256 repaymentAmount) external view returns (uint256 collateralAmount);
     
     /**
     @notice Returns an estimate on how much stable coin could be minted at the current rate
     @param depositAmount the amount of ETH that would be deposited
     @return tokenAmount  the estimated amount of stablecoin that would be minted
      */
-    function estimateTokenAmount(uint256 depositAmount) external view returns(uint256 tokenAmount);
+    function estimateTokenAmount(uint256 depositAmount) external view returns (uint256 tokenAmount);
 }
