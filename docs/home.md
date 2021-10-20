@@ -1,0 +1,1 @@
+Welcome to the Vault Stablecoin contract Wiki documentation 👋.
