@@ -2,8 +2,8 @@
 Vault stablecoin contract
 
 ## About
-* It is suite of vesting contracts for different allocations.
-* For more, refer [Wiki](https://github.com/UnicoinOfficial/vesting-contract/wiki).
+* It is suite of contracts - token, vault.
+* For more, refer [Wiki](./docs/wiki).
 
 ## Installation
 ```console
