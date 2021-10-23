@@ -34,7 +34,6 @@ contract VaultC is Ownable, Pausable, ReentrancyGuard {
     // ==========Events=============================================
     event Deposited(address indexed depositor, uint256 collateralDeposited, uint256 amountMinted);
     event Withdrawn(address indexed withdrawer, uint256 collateralWithdrawn, uint256 amountBurned);
-    event WithdrawTransferETHFailed(address indexed withdrawer, uint256 collateralWithdrawn, uint256 amountBurned);
     event Received(address, uint);
     // ==========Constructor========================================
     constructor(
