@@ -1,5 +1,6 @@
 # Vault-stablecoin
-Vault stablecoin contract
+
+Vault contract with deposit/withdraw of ETH & mint/burn of native tokens
 
 ## About
 * It is suite of contracts - token, vault.

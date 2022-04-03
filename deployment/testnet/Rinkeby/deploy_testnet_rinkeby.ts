@@ -17,6 +17,11 @@ async function main(): Promise<void> {
   const token: Contract = await TokenFactory.deploy("AUDC Token", "AUDC");
   await token.deployed();
   console.log('Token deployed to: ', token.address);
+  console.log(
+    `The transaction that was sent to the network to deploy the token contract: ${token.deployTransaction.hash
+    }`
+  );
+
 
   // We get the vault contract to deploy
   const VaultFactory: ContractFactory = await ethers.getContractFactory(
@@ -25,6 +30,10 @@ async function main(): Promise<void> {
   const vault: Contract = await VaultFactory.deploy(token.address, 3000);
   await vault.deployed();
   console.log('Vault deployed to: ', vault.address);
+  console.log(
+    `The transaction that was sent to the network to deploy the vault contract: ${vault.deployTransaction.hash
+    }`
+  );
 
   // add the vault address into token contract
 
